@@ -16,6 +16,14 @@ class Gobang(object):
 
     def create_gui(self):
         self.canvas = tk.Canvas(self.master, width=600, height=600, bg='bisque')
+        screenWidth = self.master.winfo_screenwidth()
+        screenHeight = self.master.winfo_screenheight()
+
+        centerX = int((screenWidth - 600) / 2)
+        centerY = int((screenHeight - 600) / 2)
+
+        self.master.geometry('600x600+{}+{}'.format(centerX, centerY))
+
         self.canvas.pack()
 
         for i in range(16):
