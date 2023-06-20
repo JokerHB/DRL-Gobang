@@ -209,3 +209,41 @@ class AC(nn.Module):
 
             if i % (self.target_update - 1) == 0:
                 self.save_model(model_path=self.model_path)
+
+    @torch.no_grad()
+    def eval_model(self, env, is_first=None):
+        self.player1.eval()
+        self.player2.eval()
+
+        mask = torch.ones((env.board_size, env.board_size)).to(device)
+        cnt = 0
+
+        state, done = env.reset()
+
+        while not done:
+            state = torch.from_numpy(np.array(state)).float().to(device)
+            state = state.view(1, -1)
+            mask = self.update_mask(state=state, mask=mask)
+
+            if torch.eq(mask, 0).all():
+                break
+
+            if is_first is None:
+                if cnt % 2 == 0:
+                    probs, score = self.player1(state)
+                else:
+                    probs, score = self.player2(state)
+            elif is_first is True:
+                probs, score = self.player1(state)
+            else:
+                probs, score = self.player2(state)
+
+            probs = probs.squeeze(0).squeeze(-1)
+            probs = (probs + mask.log()).softmax(dim=-1)
+            dist = torch.distributions.Categorical(probs)
+            ptr = dist.sample()
+            logp = dist.log_prob(ptr)
+            logp = logp if not done else logp * 0.0
+
+            state, reward, done = env.step(int(ptr.cpu().item()))
+            cnt += 1

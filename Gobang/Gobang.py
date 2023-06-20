@@ -24,8 +24,12 @@ class Gobang(object):
     def get_xy(self, action):
         return action // len(self.board), action % len(self.board[0])
 
-    def step(self, action):
+    def step(self, action, display=False):
         x, y = self.get_xy(action=action)
+
+        if display:
+            self.self_play_display(position=(x, y))
+
         reward = self.cmd_play((x, y))
         if reward:
             return self.board, 1.0, reward
@@ -60,13 +64,24 @@ class Gobang(object):
 
         self.board[x][y] = self.current_player
 
-        if self.check_win(x, y):
+        if self.check_win():
             self.game_over = True
             print(f'Player {self.current_player} wins!')
 
         self.current_player = 3 - self.current_player
 
         return self.game_over
+
+    def self_play_display(self, position):
+        y, x = position[0], position[1]
+
+        if self.current_player == 1:
+            color = 'black'
+        else:
+            color = 'white'
+
+        self.canvas.create_oval(x * 40 + 5, y * 40 + 5, x * 40 + 35, y * 40 + 35, fill=color)
+        self.canvas.update()
 
     def place_piece(self, event):
         x, y = event.x // 40, event.y // 40
@@ -86,21 +101,28 @@ class Gobang(object):
                 showinfo(title='Hi', message='Player White Wins!')
             exit(0)
 
-    def check_win(self, x, y):
-        for dx, dy in [(1, 0), (0, 1), (1, 1), (1, -1)]:
-            count = 1
-            for direction in [(-1, -1), (1, 1)]:
-                for step in range(1, 5):
-                    new_x = x + direction[0] * dx * step
-                    new_y = y + direction[1] * dy * step
+    def check_win(self):
+        rows = len(self.board)
+        cols = len(self.board[0])
 
-                    if 0 <= new_x < 15 and 0 <= new_y < 15 and self.board[new_y][new_x] == self.current_player:
-                        count += 1
-                    else:
-                        break
+        for row in range(rows):
+            for col in range(cols - 4):
+                if all(self.board[row][col + i] == self.current_player for i in range(5)):
+                    return True
+        for col in range(cols):
+            for row in range(rows - 4):
+                if all(self.board[row + i][col] == self.current_player for i in range(5)):
+                    return True
 
-            if count >= 5:
-                return True
+        for row in range(rows - 4):
+            for col in range(cols - 4):
+                if all(self.board[row + i][col + i] == self.current_player for i in range(5)):
+                    return True
+
+        for row in range(rows - 4):
+            for col in range(4, cols):
+                if all(self.board[row + i][col - i] == self.current_player for i in range(5)):
+                    return True
 
         return False
 
