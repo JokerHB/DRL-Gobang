@@ -6,13 +6,30 @@ from tkinter.messagebox import showinfo
 
 class Gobang(object):
 
-    def __init__(self, master):
+    def __init__(self, master, board_size=15):
         self.master = master
         self.master.title('Gobang Game')
-        self.board = [[0 for _ in range(15)] for _ in range(15)]
+        self.board_size = board_size
+        self.board = [[0 for _ in range(board_size)] for _ in range(board_size)]
         self.current_player = 1
         self.game_over = False
         self.create_gui()
+
+    def reset(self):
+        self.board = [[0 for _ in range(self.board_size)] for _ in range(self.board_size)]
+        self.current_player = 1
+        self.game_over = False
+        return self.board, self.game_over
+
+    def get_xy(self, action):
+        return action // len(self.board), action % len(self.board[0])
+
+    def step(self, action):
+        x, y = self.get_xy(action=action)
+        reward = self.cmd_play((x, y))
+        if reward:
+            return self.board, 1.0, reward
+        return self.board, -1.0, reward
 
     def create_gui(self):
         self.canvas = tk.Canvas(self.master, width=600, height=600, bg='bisque')
@@ -38,10 +55,10 @@ class Gobang(object):
     def modify_board(self, position):
         x, y = position[0], position[1]
 
-        if self.board[y][x] != 0:
+        if self.board[x][y] != 0:
             return None
 
-        self.board[y][x] = self.current_player
+        self.board[x][y] = self.current_player
 
         if self.check_win(x, y):
             self.game_over = True
@@ -60,7 +77,7 @@ class Gobang(object):
             color = 'white'
         self.canvas.create_oval(x * 40 + 5, y * 40 + 5, x * 40 + 35, y * 40 + 35, fill=color)
         self.canvas.update()
-        self.modify_board(position=(x, y))
+        self.modify_board(position=(y, x))
 
         if self.game_over:
             if (3 - self.current_player) % 2 == 1:
