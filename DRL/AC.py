@@ -153,13 +153,13 @@ class AC(nn.Module):
                     if cnt % 2 == 0:
                         p1_log_p.append(logp)
                         if done:
-                            p1_reward_list.append(reward * cnt * cnt)
+                            p1_reward_list.append(reward * 100)
                         else:
                             p1_reward_list.append(reward)
                     else:
                         p2_log_p.append(logp)
                         if done:
-                            p2_reward_list.append(reward * cnt * cnt)
+                            p2_reward_list.append(reward * 100)
                         else:
                             p2_reward_list.append(reward)
                 cnt += 1
